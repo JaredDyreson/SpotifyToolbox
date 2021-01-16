@@ -6,13 +6,10 @@ import matplotlib.pyplot as plt
 import matplotlib
 import operator
 import numpy as np
-from flask import redirect
 from datetime import datetime
 
-# TODO : make sure these are installed
 from SpotifyAuthenticator import CredentialIngestor
-from .HelperFunctions import authenticate
-# from SpotifyToolbox.SpotifyToolbox.HelperFunctions import authenticate
+from SpotifyToolbox.HelperFunctions import authenticate
 
 class SpotifyArtist():
     def __init__(self, name : str, popularity : int,
@@ -35,18 +32,17 @@ class ArtistGraph():
 
         self.title = title
         self.token = token
-
+        self.headers = {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {self.token}'
+        }
         self.artists = self.get_top_artists()
         self.figure = self.generate_bar_graph()
 
     def get_top_artists(self) -> list:
           url = "https://api.spotify.com/v1/me/top/artists"
-          headers = {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'Authorization': f'Bearer {self.token}'
-          }
-          response = json.loads(requests.get(url, headers=headers).content)
+          response = json.loads(requests.get(url, headers=self.headers).content)
           return [SpotifyArtist(
             artist['name'], int(artist['popularity']), artist['id']
             ) for artist in response['items']
@@ -57,12 +53,7 @@ class ArtistGraph():
            raise ValueError
 
         url = f'https://api.spotify.com/v1/artists/{artist_id}'
-        headers = {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'Authorization': f'Bearer {self.token}'
-        }
-        response = json.loads(requests.get(url, headers=headers).content)
+        response = json.loads(requests.get(url, headers=self.headers).content)
         return [element['url'] for element in response['images']]
 
     def generate_bar_graph(self) -> matplotlib.figure.Figure:
